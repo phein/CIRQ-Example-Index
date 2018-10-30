@@ -74,12 +74,15 @@ print(p)
 
 # Step through moments and print out the state after each moment.
 for i, step in enumerate(sim.simulate_moment_steps(circuit)):
-    print('state at step %d: %s' % (i, np.around(step.state(), 3)))
-    print('prob(%d) at step %d: %s' % (i,i, np.around(abs(step.state())**2,3)))
+    print('state at step %d: %s' % (i+1, np.around(step.state(), 3)))
+    print('prob(%d) at step %d: %s' % (i+1,i+1, np.around(abs(step.state())**2,3)))
     hh.pBarsStd(np.around(step.state(), 3))
     hh.pBarsBell(np.around(step.state(), 3))
 
-
+#%%
+    
+hh.pBarsStdAll(sim.simulate_moment_steps(circuit))
+hh.pBarsBellAll(sim.simulate_moment_steps(circuit))
 
 
 
