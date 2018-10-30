@@ -10,7 +10,7 @@ analyzing the circuit
 
 import cirq as cq;
 import numpy as np;
-
+import hqhelp as hh;
 
 #%%
 
@@ -76,6 +76,10 @@ print(p)
 for i, step in enumerate(sim.simulate_moment_steps(circuit)):
     print('state at step %d: %s' % (i, np.around(step.state(), 3)))
     print('prob(%d) at step %d: %s' % (i,i, np.around(abs(step.state())**2,3)))
+    hh.pBarsStd(np.around(step.state(), 3))
+    hh.pBarsBell(np.around(step.state(), 3))
+
+
 
 
 
