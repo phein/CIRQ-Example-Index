@@ -10,7 +10,7 @@ analyzing the circuit
 
 import cirq as cq;
 import numpy as np;
-import hqhelp as hh;
+import hqAnalysis.hqhelp as hh;
 
 #%%
 
