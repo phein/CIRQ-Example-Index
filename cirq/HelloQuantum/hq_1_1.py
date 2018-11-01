@@ -76,13 +76,13 @@ print(p)
 for i, step in enumerate(sim.simulate_moment_steps(circuit)):
     print('state at step %d: %s' % (i+1, np.around(step.state(), 3)))
     print('prob(%d) at step %d: %s' % (i+1,i+1, np.around(abs(step.state())**2,3)))
-    hh.pBarsStd(np.around(step.state(), 3))
-    hh.pBarsBell(np.around(step.state(), 3))
+    hh.p_bars_std(np.around(step.state(), 3))
+    hh.p_bars_bell(np.around(step.state(), 3))
 
 #%%
     
-hh.pBarsStdAll(sim.simulate_moment_steps(circuit))
-hh.pBarsBellAll(sim.simulate_moment_steps(circuit))
+hh.p_bars_std_all(sim.simulate_moment_steps(circuit))
+hh.p_bars_bell_all(sim.simulate_moment_steps(circuit))
 
 
 
