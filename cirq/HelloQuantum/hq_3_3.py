@@ -50,7 +50,7 @@ print(circuit)
 #%%
 
 # "Run" the computation 20 times.
-result = sim.run(circuit, repetitions=10)
+result = sim.run(circuit, repetitions=25)
 
 # view results
 print(result)
@@ -76,6 +76,7 @@ hh.hq_grid(s1.state())
 
 s2 = next(puz)
 hh.hq_grid(s2.state())
+
 
 #%%
 
