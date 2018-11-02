@@ -41,6 +41,75 @@ def to_bs(state):
 
     return b_change.dot(state)
 
+#%%
+
+def density_matrix(state):
+    """
+    Given a quantum state compute it's density matrix w.r.t. the current basis
+    for the state.
+    """
+
+    return np.outer(state, np.conj(state))
+
+def trace_upper(d_op):
+    """
+    Trace out the upper bit, leaving the density operator for the lower
+    order bit
+    """
+
+    return np.array([[d_op[0, 0]+d_op[2, 2], d_op[0, 1]+d_op[2, 3]],
+                     [d_op[1, 0]+d_op[3, 2], d_op[1, 1]+d_op[3, 3]]])
+
+def trace_lower(d_op):
+    """
+    Trace out the lower bit, leaving the density operator for the high
+    order bit
+    """
+
+    return np.array([[d_op[0, 0]+d_op[1, 1], d_op[0, 2]+d_op[1, 3]],
+                     [d_op[2, 0]+d_op[3, 1], d_op[2, 2]+d_op[3, 3]]])
+
+#%%
+
+def p_std_lower(state):
+    """
+    Compute measurement probabilities for the lower bit of the system w.r.t
+    the standard basis
+    """
+
+    d_op = trace_upper(density_matrix(state))
+    return np.real(np.array([d_op[0, 0], d_op[1, 1]]))
+
+def p_std_upper(state):
+    """
+    Compute measurement probabilities for the lower bit of the system w.r.t
+    the standard basis
+    """
+
+    d_op = trace_lower(density_matrix(state))
+    return np.real(np.array([d_op[0, 0], d_op[1, 1]]))
+
+def p_bell_lower(state):
+    """
+    Compute measurement probabilities for the lower bit of the system w.r.t
+    the bell basis
+    """
+    h_gate = (1/np.sqrt(2))*np.array([[1, 1], [1, -1]]);
+    d_op_std = trace_upper(density_matrix(state))
+    d_op = np.matmul(np.matmul(h_gate, d_op_std), h_gate)
+
+    return np.real(np.array([d_op[0, 0], d_op[1, 1]]))
+
+def p_bell_upper(state):
+    """
+    Compute measurement probabilities for the lower bit of the system w.r.t
+    the bell basis
+    """
+    h_gate = (1/np.sqrt(2))*np.array([[1, 1], [1, -1]]);
+    d_op_std = trace_lower(density_matrix(state))
+    d_op = np.matmul(np.matmul(h_gate, d_op_std), h_gate)
+
+    return np.real(np.array([d_op[0, 0], d_op[1, 1]]))
 
 #%%
 
@@ -76,247 +145,72 @@ def p_bs(state):
 
     return abs(to_bs(state))**2
 
-
 #%%
 
-def p_bars_std(state):
-    """
-    Display the probability of measuring each of the four standard basis
-    outcomes.
-    """
-
-    ax = plt.subplots()[1]
-    ax.bar(np.arange(4), p_std(state), 0.25, color='b')
-    ax.set_xlabel('Standard Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring the Standard Basis')
-    ax.set_xticks(np.arange(4))
-    ax.set_xticklabels(('00', '01', '10', '11'))
-    ax.set_ylim((0, 1.1))
-
-    plt.show()
-
-def p_bars_bell(state):
-    """
-    Display the probability of measuring each of the four Bell basis
-    outcomes.
-    """
-
-    ax = plt.subplots()[1]
-    ax.bar(np.arange(4), p_bell(state), 0.25, color='b')
-    ax.set_xlabel('Bell Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring the Bell Basis')
-    ax.set_xticks(np.arange(4))
-    ax.set_xticklabels(('++', '+-', '-+', '--'))
-    ax.set_ylim((0, 1.1))
-
-    plt.show()
-
-def p_bars_sb(state):
-    """
-    Display the probability of measuring each of the four std/bell
-    hybrid basis
-    """
-
-    ax = plt.subplots()[1]
-    ax.bar(np.arange(4), p_sb(state), 0.25, color='b')
-    ax.set_xlabel('Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring the Std/Bell Basis')
-    ax.set_xticks(np.arange(4))
-    ax.set_xticklabels(('0+', '0-', '1+', '1-'))
-    ax.set_ylim((0, 1.1))
-
-    plt.show()
-
-def p_bars_bs(state):
-    """
-    Display the probability of measuring each of the four std/bell
-    hybrid basis
-    """
-
-    ax = plt.subplots()[1]
-    ax.bar(np.arange(4), p_bs(state), 0.25, color='b')
-    ax.set_xlabel('Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring the Bell/Std Basis')
-    ax.set_xticks(np.arange(4))
-    ax.set_xticklabels(('+0', '+1', '-0', '-1'))
-    ax.set_ylim((0, 1.1))
-
-    plt.show()
-
-#%%
-
-def p_bars_std_all(sim):
-    """
-    Take a moment step simulation generator and produce a graph showing
-    the probability of each standard basis at each step.
-    """
-
-    states = np.vstack([s.state() for s in sim])
-    fig, ax = plt.subplots()
-    bar_width = .25
-    index = np.arange(4)*(len(states)+1)*bar_width
-
-
-    for i, state in enumerate(states):
-        ax.bar(index+(i*bar_width), p_std(state), bar_width,
-               label="step " + str(i+1))
-
-    ax.set_xlabel('Standard Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring the Standard Basis')
-    ax.set_xticks(index+(len(states)*bar_width)/2)
-    ax.set_xticklabels(('00', '01', '10', '11'))
-    ax.set_ylim((0, 1.1))
-    ax.legend()
-
-    fig.tight_layout()
-    plt.show()
-
-def p_bars_bell_all(sim):
-    """
-    Take a moment step simulation generator and produce a graph showing
-    the probability of each standard basis at each step.
-    """
-
-    states = np.vstack([s.state() for s in sim])
-
-
-    fig, ax = plt.subplots()
-    bar_width = .25
-    index = np.arange(4)*(len(states)+1)*bar_width
-
-    for i, state in enumerate(states):
-        ax.bar(index+(i*bar_width), p_bell(state), bar_width,
-               label="step " + str(i+1))
-
-    ax.set_xlabel('Bell Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring the Bell Basis')
-    ax.set_xticks(index+(len(states)*bar_width)/2)
-    ax.set_xticklabels(('++', '+-', '-+', '--'))
-    ax.set_ylim((0, 1.1))
-    ax.legend()
-
-    fig.tight_layout()
-    plt.show()
-
-def p_bars_sb_all(sim):
-    """
-    Take a moment step simulation generator and produce a graph showing
-    the probability of each ... std/bell hybrid basis
-    """
-
-    states = np.vstack([s.state() for s in sim])
-
-    fig, ax = plt.subplots()
-    bar_width = .25
-    index = np.arange(4)*(len(states)+1)*bar_width
-
-    for i, state in enumerate(states):
-        ax.bar(index+(i*bar_width), p_sb(state), bar_width,
-               label="step " + str(i+1))
-
-    ax.set_xlabel('Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring in a Std/Bell Hybrid Basis')
-    ax.set_xticks(index+(len(states)*bar_width)/2)
-    ax.set_xticklabels(('0+', '0-', '1+', '1-'))
-    ax.set_ylim((0, 1.1))
-    ax.legend()
-
-    fig.tight_layout()
-    plt.show()
-
-def p_bars_bs_all(sim):
-    """
-    Take a moment step simulation generator and produce a graph showing
-    the probability of each ... bell/std hybrid basis
-    """
-
-    states = np.vstack([s.state()for s in sim])
-
-    fig, ax = plt.subplots()
-    bar_width = .25
-    index = np.arange(4)*(len(states)+1)*bar_width
-
-    for i, state in enumerate(states):
-        ax.bar(index+(i*bar_width), p_bs(state), bar_width,
-               label="step " + str(i+1))
-
-    ax.set_xlabel('Basis')
-    ax.set_ylabel('Probability')
-    ax.set_yticks([0, .25, .5, .75, 1])
-    ax.set_title('Probability of Measuring in a Bell/Std Hybrid Basis')
-    ax.set_xticks(index+(len(states)*bar_width)/2)
-    ax.set_xticklabels(('+0', '+1', '-0', '-1'))
-    ax.set_ylim((0, 1.1))
-    ax.legend()
-
-    fig.tight_layout()
-    plt.show()
-
-#%%
-
-def hq_grid(state, tofile=False, name=""):
+def hq_grid(state, to_file=False, name=""):
     """
     Plot probability distributions for the two qubit measurment outcomes
     Grid for Hello Quantum
     """
 
-    fig, ax = plt.subplots(2, 2)
+    fig, ax = plt.subplots(2, 4, sharey=True, figsize=(10, 5))
+    plt.subplots_adjust(right=1, left=.25)
 
-     #North Bell
-    ax[0][0].bar(np.arange(4), p_bell(state), 0.25, color='b')
-    ax[0][0].set_xlabel('Bell Basis')
-    ax[0][0].set_ylabel('Probability')
+    #Upper Bell
+    ax[0][0].bar(np.arange(2), p_bell_upper(state), 0.25, color='b')    
     ax[0][0].set_yticks([0, .25, .5, .75, 1])
-    ax[0][0].set_title('Bell Measurement')
-    ax[0][0].set_xticks(np.arange(4))
-    ax[0][0].set_xticklabels(('++', '+-', '-+', '--'))
+    ax[0][0].set_title('High Bit')
+    ax[0][0].set_xticks(np.arange(2))
+    ax[0][0].set_xticklabels(('+', '-'))
     ax[0][0].set_ylim((0, 1.1))
 
-    #West BS
-    ax[1][0].bar(np.arange(4), p_bs(state), 0.25, color='b')
-    ax[1][0].set_xlabel('Basis')
-    ax[1][0].set_ylabel('Probability')
-    ax[1][0].set_yticks([0, .25, .5, .75, 1])
-    ax[1][0].set_title('Bell/Std Measurement')
-    ax[1][0].set_xticks(np.arange(4))
-    ax[1][0].set_xticklabels(('+0', '+1', '-0', '-1'))
+    #Upper std
+    ax[1][0].bar(np.arange(2), p_std_upper(state), 0.25, color='b')    
+    ax[1][0].set_yticks([0, .25, .5, .75, 1])    
+    ax[1][0].set_xticks(np.arange(2))
+    ax[1][0].set_xticklabels(('0', '1'))
     ax[1][0].set_ylim((0, 1.1))
 
-    #East SB
-    ax[0][1].bar(np.arange(4), p_sb(state), 0.25, color='b')
-    ax[0][1].set_xlabel('Basis')
-    ax[0][1].set_ylabel('Probability')
-    ax[0][1].set_yticks([0, .25, .5, .75, 1])
-    ax[0][1].set_title('Std/Bell Measurement')
+     #North Bell
+    ax[0][1].bar(np.arange(4), p_bell(state), 0.25, color='b')    
     ax[0][1].set_xticks(np.arange(4))
-    ax[0][1].set_xticklabels(('0+', '0-', '1+', '1-'))
+    ax[0][1].set_xticklabels(('++', '+-', '-+', '--'))
     ax[0][1].set_ylim((0, 1.1))
 
-    #South Std
-    ax[1][1].bar(np.arange(4), p_std(state), 0.25, color='b')
-    ax[1][1].set_xlabel('Standard Basis')
-    ax[1][1].set_ylabel('Probability')
-    ax[1][1].set_yticks([0, .25, .5, .75, 1])
-    ax[1][1].set_title('Standard Measurement')
+    #West BS
+    ax[1][1].bar(np.arange(4), p_bs(state), 0.25, color='b')    
     ax[1][1].set_xticks(np.arange(4))
-    ax[1][1].set_xticklabels(('00', '01', '10', '11'))
+    ax[1][1].set_xticklabels(('+0', '+1', '-0', '-1'))
     ax[1][1].set_ylim((0, 1.1))
 
+    #East SB
+    ax[0][2].bar(np.arange(4), p_sb(state), 0.25, color='b')
+    ax[0][2].set_xticks(np.arange(4))
+    ax[0][2].set_xticklabels(('0+', '0-', '1+', '1-'))
+    ax[0][2].set_ylim((0, 1.1))
+
+    #South Std
+    ax[1][2].bar(np.arange(4), p_std(state), 0.25, color='b')
+    ax[1][2].set_xticks(np.arange(4))
+    ax[1][2].set_xticklabels(('00', '01', '10', '11'))
+    ax[1][2].set_ylim((0, 1.1))
+    
+    #Lower Bell
+    ax[0][3].bar(np.arange(2), p_bell_lower(state), 0.25, color='b')
+    ax[0][3].set_title('Low Bit')
+    ax[0][3].set_xticks(np.arange(2))
+    ax[0][3].set_xticklabels(('+', '-'))
+    ax[0][3].set_ylim((0, 1.1))
+
+    #Lower std
+    ax[1][3].bar(np.arange(2), p_std_lower(state), 0.25, color='b')
+    ax[1][3].set_xticks(np.arange(2))
+    ax[1][3].set_xticklabels(('0', '1'))
+    ax[1][3].set_ylim((0, 1.1))
+
+    
     fig.tight_layout()
-    if tofile:
+    if to_file:
         plt.savefig(name)
     plt.show()
+
