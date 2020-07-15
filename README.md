@@ -1,1 +1,1 @@
-This repository contains examples of Pythoh, CIRQ, and OpenFermion-CIRQ scripts for educational pruposes. 
+This repository contains examples of Python, CIRQ, and OpenFermion-CIRQ scripts for educational pruposes. 
